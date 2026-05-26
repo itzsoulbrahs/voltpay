@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyameta - Secure Payment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+[data-theme="dark"]{
+  --bg:#0C0C0E;--surface:#141416;--surface2:#1C1C1F;--border:#2A2A2E;--border2:#363639;
+  --text:#F0EFE9;--text2:#9A9994;--text3:#5A5A5E;
+  --accent:#7C5CFC;--accent-glow:rgba(124,92,252,0.25);--accent-soft:rgba(124,92,252,0.12);
+  --success:#22C97A;--success-soft:rgba(34,201,122,0.12);
+  --danger:#FF5C5C;--danger-soft:rgba(255,92,92,0.10);--danger-border:rgba(255,92,92,0.2);
+  --shadow:0 32px 80px rgba(0,0,0,0.6);
+  --body-grad1:rgba(124,92,252,0.08);--body-grad2:rgba(124,92,252,0.05);
+  --toggle-bg:#2A2A2E;--toggle-icon:#9A9994;
+}
+[data-theme="light"]{
+  --bg:#F2F1EE;--surface:#FFFFFF;--surface2:#F8F7F5;--border:#E6E4DE;--border2:#D6D3CB;
+  --text:#1A1917;--text2:#5A584F;--text3:#9A9890;
+  --accent:#6B47F5;--accent-glow:rgba(107,71,245,0.18);--accent-soft:rgba(107,71,245,0.09);
+  --success:#16A85E;--success-soft:rgba(22,168,94,0.10);
+  --danger:#D93636;--danger-soft:rgba(217,54,54,0.08);--danger-border:rgba(217,54,54,0.18);
+  --shadow:0 24px 60px rgba(0,0,0,0.09);
+  --body-grad1:rgba(107,71,245,0.05);--body-grad2:rgba(107,71,245,0.025);
+  --toggle-bg:#ECEAE4;--toggle-icon:#7A7870;
+}
+
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;transition:background 0.35s,color 0.35s;}
+body{
+  display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem 4rem;
+  background-image:radial-gradient(ellipse 600px 400px at 60% -10%,var(--body-grad1) 0%,transparent 70%),
+    radial-gradient(ellipse 400px 300px at 0% 80%,var(--body-grad2) 0%,transparent 60%);
+}
+
+.card{
+  width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border);
+  border-radius:24px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.04),var(--shadow);
+  animation:slideUp 0.5s cubic-bezier(0.22,1,0.36,1);
+  transition:background 0.35s,border-color 0.35s,box-shadow 0.35s;
+}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.card-head{
+  padding:1.4rem 1.75rem 1.2rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;transition:border-color 0.35s;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{
+  width:32px;height:32px;border-radius:8px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 18px var(--accent-glow);transition:background 0.35s,box-shadow 0.35s;
+}
+.brand-mark svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-0.3px;}
+.brand-name span{color:var(--accent);}
+.head-right{display:flex;align-items:center;gap:8px;}
+.theme-btn{
+  width:34px;height:34px;border-radius:50%;background:var(--toggle-bg);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:background 0.25s,border-color 0.25s,transform 0.15s;
+}
+.theme-btn:hover{border-color:var(--accent);transform:scale(1.08);}
+.theme-btn svg{width:15px;height:15px;fill:none;stroke:var(--toggle-icon);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke 0.25s;}
+.theme-btn:hover svg{stroke:var(--accent);}
+.icon-sun{display:none;}.icon-moon{display:block;}
+[data-theme="light"] .icon-sun{display:block;}[data-theme="light"] .icon-moon{display:none;}
+.ssl-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;color:var(--success);opacity:0.8;}
+.ssl-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+
+.stepper{display:flex;align-items:center;justify-content:center;gap:8px;padding:0 1.75rem 1.2rem;}
+.step-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);transition:all 0.3s;}
+.step-dot.active{background:var(--accent);box-shadow:0 0 8px var(--accent-glow);}
+.step-dot.done{background:var(--success);}
+.step-line{flex:1;height:1px;background:var(--border);}
+
+.screen{display:none;}.screen.active{display:block;}
+.card-body{padding:1.75rem;}
+
+.order-summary{
+  background:var(--surface2);border:1px solid var(--border);border-radius:16px;
+  padding:1.25rem;margin-bottom:1.75rem;position:relative;overflow:hidden;
+  transition:background 0.35s,border-color 0.35s;
+}
+.order-summary::before{
+  content:'';position:absolute;top:0;right:0;width:110px;height:110px;
+  background:radial-gradient(circle,var(--accent-soft) 0%,transparent 70%);
+  border-radius:50%;transform:translate(40%,-40%);
+}
+.order-tag{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+.order-product{font-size:16px;font-weight:600;color:var(--text);margin-bottom:14px;}
+.order-divider{height:1px;background:var(--border);margin-bottom:14px;}
+.order-total-row{display:flex;justify-content:space-between;align-items:baseline;}
+.order-total-label{font-size:13px;color:var(--text2);}
+.order-total-amount{font-family:'Instrument Serif',serif;font-size:32px;color:var(--text);letter-spacing:-1px;line-height:1;}
+.order-total-amount span{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:400;color:var(--text3);margin-left:4px;}
+
+.section-title{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:1rem;}
+
+.field{margin-bottom:1rem;}
+.field-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+.req{color:var(--accent);font-size:14px;line-height:1;}
+.field-row{display:flex;gap:8px;}
+.prefix-box{
+  width:58px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--text2);
+  transition:background 0.35s,border-color 0.35s;
+}
+input[type=text],input[type=email],input[type=tel]{
+  width:100%;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s,background 0.35s,color 0.35s;-webkit-appearance:none;
+}
+input::placeholder{color:var(--text3);}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+input.error{border-color:var(--danger);box-shadow:0 0 0 3px var(--danger-soft);}
+input.ok{border-color:rgba(22,168,94,0.4);}
+[data-theme="dark"] input.ok{border-color:rgba(34,201,122,0.4);}
+.err-msg{font-size:11px;color:var(--danger);margin-top:5px;display:none;align-items:center;gap:4px;}
+.err-msg.show{display:flex;}
+.err-msg svg{width:11px;height:11px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;}
+
+.pay-btn{
+  width:100%;padding:15px;margin-top:0.5rem;background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;
+  letter-spacing:-0.2px;display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:opacity 0.2s,transform 0.15s,box-shadow 0.2s;
+  box-shadow:0 4px 24px var(--accent-glow);position:relative;overflow:hidden;
+}
+.pay-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.08) 0%,transparent 100%);}
+.pay-btn:hover{opacity:0.91;box-shadow:0 8px 32px var(--accent-glow);}
+.pay-btn:active{transform:scale(0.98);}
+.pay-btn svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.pay-btn .amount-mono{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:14px;}
+.foot-note{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:1rem;font-size:11px;color:var(--text3);}
+.foot-note svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+
+.back-row{
+  display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);
+  cursor:pointer;margin-bottom:1.5rem;transition:color 0.15s;width:fit-content;
+}
+.back-row:hover{color:var(--text);}
+.back-row svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+
+.user-greeting{
+  display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;margin-bottom:1.5rem;transition:background 0.35s,border-color 0.35s;
+}
+.avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;
+  flex-shrink:0;box-shadow:0 0 12px var(--accent-glow);transition:background 0.35s;
+}
+.greet-name{font-size:14px;font-weight:500;color:var(--text);}
+.greet-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+
+.qr-box{
+  background:var(--surface2);border:1px solid var(--border);border-radius:16px;
+  padding:1.5rem;text-align:center;margin-bottom:1.25rem;
+  transition:background 0.35s,border-color 0.35s;
+  position:relative;overflow:hidden;
+}
+.qr-box::before{
+  content:'';position:absolute;inset:-30% 18% auto;height:120px;
+  background:linear-gradient(180deg,transparent 0%,rgba(107,71,245,0.12) 48%,transparent 100%);
+  animation:scanSweep 4.8s linear infinite;
+  pointer-events:none;opacity:0.9;
+}
+@keyframes scanSweep{
+  0%{transform:translateY(-140px);}
+  100%{transform:translateY(320px);}
+}
+
+.state-qr{}
+.qr-amount{font-family:'Instrument Serif',serif;font-size:30px;color:var(--text);letter-spacing:-1px;margin-bottom:2px;}
+.qr-hint{font-size:12px;color:var(--text3);margin-bottom:1.25rem;line-height:1.5;}
+.qr-frame{
+  display:inline-block;padding:16px;background:#fff;border-radius:14px;margin-bottom:1.25rem;
+  box-shadow:0 2px 12px rgba(0,0,0,0.07);animation:qrFloat 2.8s ease-in-out infinite;
+}
+@keyframes qrFloat{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-4px);}
+}
+.upi-apps{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem;}
+.upi-chip{
+  font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;
+  background:var(--surface);border:1px solid var(--border2);color:var(--text2);
+  transition:background 0.35s,border-color 0.35s;
+}
+.payment-status{
+  display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--border);font-size:11px;font-weight:500;
+  color:var(--text2);margin-bottom:1rem;
+}
+.status-ping{
+  width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 var(--accent-glow);
+  animation:statusPulse 1.8s ease-out infinite;
+}
+@keyframes statusPulse{
+  0%{box-shadow:0 0 0 0 var(--accent-glow);}
+  70%{box-shadow:0 0 0 9px rgba(107,71,245,0);}
+  100%{box-shadow:0 0 0 0 rgba(107,71,245,0);}
+}
+
+.timer-track{height:2px;background:var(--border);border-radius:1px;overflow:hidden;margin-bottom:6px;}
+.timer-fill{height:100%;background:var(--accent);border-radius:1px;transition:width 1s linear,background 0.6s;box-shadow:0 0 5px var(--accent-glow);}
+.timer-fill.warn{background:#F59E0B;}
+.timer-fill.crit{background:var(--danger);}
+.timer-label{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.timer-label span{color:var(--text2);}
+
+.state-failed{
+  display:none;flex-direction:column;align-items:center;padding:0.75rem 0 0.5rem;
+}
+.fail-icon-wrap{
+  width:64px;height:64px;border-radius:50%;
+  background:var(--danger-soft);border:1px solid var(--danger-border);
+  display:flex;align-items:center;justify-content:center;margin-bottom:14px;
+  animation:popIn 0.5s cubic-bezier(.175,.885,.32,1.275) both;
+}
+@keyframes popIn{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
+.fail-icon-wrap svg{width:28px;height:28px;fill:none;stroke:var(--danger);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+.fail-title{font-size:17px;font-weight:600;color:var(--danger);margin-bottom:6px;}
+.fail-sub{font-size:12px;color:var(--text3);line-height:1.6;text-align:center;max-width:260px;margin-bottom:18px;}
+.fail-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.btn-retry{
+  padding:10px 22px;background:var(--accent);color:#fff;border:none;border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  box-shadow:0 4px 14px var(--accent-glow);transition:opacity 0.2s,transform 0.15s;
+}
+.btn-retry:hover{opacity:0.88;}.btn-retry:active{transform:scale(0.97);}
+.btn-contact{
+  padding:10px 22px;background:transparent;border:1px solid var(--border2);border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;
+  transition:border-color 0.2s,color 0.2s;
+}
+.btn-contact:hover{border-color:var(--accent);color:var(--text);}
+
+.trouble-txt{text-align:center;font-size:11px;color:var(--text3);}
+.trouble-txt a{color:var(--accent);text-decoration:none;font-weight:500;}
+
+.contact-hero{text-align:center;margin-bottom:1.75rem;}
+.contact-icon-ring{
+  width:62px;height:62px;border-radius:50%;background:var(--accent-soft);
+  border:1px solid rgba(107,71,245,0.18);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 14px;
+}
+.contact-icon-ring svg{width:25px;height:25px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.contact-title{font-family:'Instrument Serif',serif;font-size:22px;color:var(--text);letter-spacing:-0.5px;margin-bottom:6px;}
+.contact-sub{font-size:13px;color:var(--text3);line-height:1.6;}
+.contact-card{background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1rem;transition:background 0.35s,border-color 0.35s;}
+.contact-item{display:flex;align-items:center;gap:14px;padding:16px 18px;text-decoration:none;border-bottom:1px solid var(--border);transition:background 0.15s;}
+.contact-item:last-child{border-bottom:none;}
+.contact-item:hover{background:var(--border);}
+.ci-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ci-icon.tg{background:rgba(36,161,222,0.11);}
+.ci-icon.em{background:var(--accent-soft);}
+.ci-icon svg{width:18px;height:18px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ci-icon.tg svg{stroke:#24A1DE;}
+.ci-icon.em svg{stroke:var(--accent);}
+.ci-label{font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);margin-bottom:2px;}
+.ci-val{font-size:14px;font-weight:500;color:var(--text);}
+.contact-back-btn{
+  width:100%;padding:13px;background:transparent;border:1px solid var(--border2);border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;color:var(--text2);cursor:pointer;
+  transition:border-color 0.2s,color 0.2s;
+}
+.contact-back-btn:hover{color:var(--text);border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-head">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div class="brand-name">cya<span>meta</span></div>
+    </div>
+    <div class="head-right">
+      <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <div class="ssl-icon" title="SSL Secured">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepper">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-line"></div>
+    <div class="step-dot" id="dot3"></div>
+  </div>
+
+  <div class="screen active" id="s1">
+    <div class="card-body">
+      <div class="order-summary">
+        <div class="order-tag">Order Summary</div>
+        <div class="order-product">DE40 Scalper EA</div>
+        <div class="order-divider"></div>
+        <div class="order-total-row">
+          <div class="order-total-label">Total payable</div>
+          <div class="order-total-amount">₹4,606 <span>INR</span></div>
+        </div>
+      </div>
+
+      <div class="section-title">Your details</div>
+
+      <div class="field">
+        <div class="field-label">Full name <span class="req">*</span></div>
+        <input type="text" id="f-name" placeholder="Aakash Sharma" autocomplete="name">
+        <div class="err-msg" id="e-name">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Please enter your full name
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Email address <span class="req">*</span></div>
+        <input type="email" id="f-email" placeholder="you@example.com" autocomplete="email">
+        <div class="err-msg" id="e-email">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Please enter a valid email address
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Phone number <span class="req">*</span></div>
+        <div class="field-row">
+          <div class="prefix-box">+91</div>
+          <input type="tel" id="f-phone" placeholder="98765 43210" autocomplete="tel" style="flex:1;" maxlength="10">
+        </div>
+        <div class="err-msg" id="e-phone">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Enter a valid 10-digit phone number
+        </div>
+      </div>
+
+      <button class="pay-btn" onclick="validateAndPay()">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Pay <span class="amount-mono">₹4,606</span> via UPI
+      </button>
+
+      <div class="foot-note">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Secured by 256-bit SSL encryption
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="s2">
+    <div class="card-body">
+      <div class="back-row" id="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </div>
+
+      <div class="user-greeting">
+        <div class="avatar" id="g-init">A</div>
+        <div>
+          <div class="greet-name" id="g-name">Hey, Aakash</div>
+          <div class="greet-sub" id="g-sub">Complete your payment below</div>
+        </div>
+      </div>
+
+      <div class="qr-box" id="qr-box">
+        <div class="state-qr" id="state-qr">
+          <div class="qr-amount">₹4,606</div>
+          <div class="qr-hint">Open any UPI app, scan the QR, and complete your payment before the timer ends.</div>
+
+          <div class="payment-status">
+            <span class="status-ping"></span>
+            Waiting for payment confirmation
+          </div>
+
+          <div class="qr-frame">
+            <img
+              src="https://res.cloudinary.com/ddhmtzdhi/image/upload/v1779784574/WhatsApp_Image_2026-05-26_at_1.51.15_PM_i6oaxn.jpg"
+              alt="UPI QR code"
+              width="176"
+              height="176"
+              style="display:block;width:176px;height:176px;object-fit:cover;border-radius:10px;"
+            >
+          </div>
+
+          <div class="upi-apps">
+            <span class="upi-chip">GPay</span>
+            <span class="upi-chip">PhonePe</span>
+            <span class="upi-chip">Paytm</span>
+            <span class="upi-chip">BHIM</span>
+            <span class="upi-chip">Any UPI</span>
+          </div>
+
+          <div class="timer-track">
+            <div class="timer-fill" id="t-bar" style="width:100%"></div>
+          </div>
+          <div class="timer-label">QR expires in <span id="t-cd">10:00</span></div>
+        </div>
+
+        <div class="state-failed" id="state-failed">
+          <div class="fail-icon-wrap">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div class="fail-title">Payment Failed</div>
+          <div class="fail-sub">The 10 minute payment window ended and no payment was received. Your payment is now marked as failed.</div>
+          <div class="fail-actions">
+            <button class="btn-retry" onclick="retryPayment()">Try Again</button>
+            <button class="btn-contact" onclick="goContact()">Contact Support</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="trouble-txt" id="trouble-row">
+        Need help? <a href="#" onclick="goContact();return false;">Contact support</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="s3">
+    <div class="card-body">
+      <div class="contact-hero">
+        <div class="contact-icon-ring">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="contact-title">Need Help?</div>
+        <div class="contact-sub">Our team verifies payments and activates your access.<br>We respond fast - reach out anytime.</div>
+      </div>
+      <div class="contact-card">
+        <a class="contact-item" href="https://t.me/Webenoid" target="_blank" rel="noopener">
+          <div class="ci-icon tg">
+            <svg viewBox="0 0 24 24"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.666a2.25 2.25 0 0 0 .126 4.238l3.708 1.14 1.547 4.924a1 1 0 0 0 1.719.35l2.28-2.536 4.453 3.272a2.252 2.252 0 0 0 3.484-1.38l2.85-15.516a2.25 2.25 0 0 0-2.645-2.373z"/></svg>
+          </div>
+          <div>
+            <div class="ci-label">Telegram</div>
+            <div class="ci-val">@Webenoid</div>
+          </div>
+        </a>
+        <a class="contact-item" href="mailto:smartexpertadvisor1@gmail.com">
+          <div class="ci-icon em">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div>
+            <div class="ci-label">Email</div>
+            <div class="ci-val" style="font-size:13px;">smartexpertadvisor1@gmail.com</div>
+          </div>
+        </a>
+      </div>
+      <button class="contact-back-btn" onclick="goBackToQR()">&larr; Back to payment</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let timerInt = null;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function setStep(n){
+  ['dot1','dot2','dot3'].forEach((d,i) => {
+    const el = document.getElementById(d);
+    el.className = 'step-dot';
+    if(i + 1 < n) el.classList.add('done');
+    else if(i + 1 === n) el.classList.add('active');
+  });
+}
+
+function toggleTheme(){
+  const h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+
+function setQRState(state){
+  document.getElementById('state-qr').style.display = state === 'qr' ? 'block' : 'none';
+  document.getElementById('state-failed').style.display = state === 'failed' ? 'flex' : 'none';
+  document.getElementById('qr-box').classList.toggle('is-failed', state === 'failed');
+}
+
+function validateAndPay(){
+  const name = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  let ok = true;
+
+  const iN = document.getElementById('f-name');
+  const eN = document.getElementById('e-name');
+  if(!name || name.length < 2){iN.classList.add('error');iN.classList.remove('ok');eN.classList.add('show');ok = false;}
+  else{iN.classList.remove('error');iN.classList.add('ok');eN.classList.remove('show');}
+
+  const iE = document.getElementById('f-email');
+  const eE = document.getElementById('e-email');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){iE.classList.add('error');iE.classList.remove('ok');eE.classList.add('show');ok = false;}
+  else{iE.classList.remove('error');iE.classList.add('ok');eE.classList.remove('show');}
+
+  const iP = document.getElementById('f-phone');
+  const eP = document.getElementById('e-phone');
+  if(!/^[6-9]\d{9}$/.test(phone)){iP.classList.add('error');iP.classList.remove('ok');eP.classList.add('show');ok = false;}
+  else{iP.classList.remove('error');iP.classList.add('ok');eP.classList.remove('show');}
+
+  if(!ok) return;
+
+  const first = name.split(' ')[0];
+  document.getElementById('g-init').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('g-name').textContent = 'Hey, ' + first;
+  document.getElementById('g-sub').textContent = '+91 ' + phone + ' · ' + email;
+
+  setQRState('qr');
+  document.getElementById('back-btn').style.display = 'flex';
+  document.getElementById('trouble-row').style.display = 'block';
+  show('s2');
+  setStep(2);
+  startTimer();
+}
+
+function goBack(){
+  clearInterval(timerInt);
+  show('s1');
+  setStep(1);
+}
+
+function goContact(){
+  show('s3');
+}
+
+function goBackToQR(){
+  show('s2');
+}
+
+function retryPayment(){
+  clearInterval(timerInt);
+  setQRState('qr');
+  document.getElementById('back-btn').style.display = 'flex';
+  document.getElementById('trouble-row').style.display = 'block';
+  document.getElementById('t-bar').style.width = '100%';
+  document.getElementById('t-bar').className = 'timer-fill';
+  document.getElementById('t-cd').textContent = '10:00';
+  show('s2');
+  setStep(2);
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerInt);
+
+  let left = 600;
+  const bar = document.getElementById('t-bar');
+  const cd = document.getElementById('t-cd');
+  bar.className = 'timer-fill';
+  bar.style.width = '100%';
+
+  timerInt = setInterval(() => {
+    left--;
+
+    const pct = left / 600;
+    if(pct <= 0.12) bar.className = 'timer-fill crit';
+    else if(pct <= 0.33) bar.className = 'timer-fill warn';
+    else bar.className = 'timer-fill';
+
+    bar.style.width = Math.max(pct, 0).toFixed(2) + '%';
+
+    const m = Math.floor(left / 60);
+    const s = left % 60;
+    cd.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+
+    if(left <= 0){
+      clearInterval(timerInt);
+      cd.textContent = 'Expired';
+      bar.style.width = '0%';
+      showFailed();
+    }
+  }, 1000);
+}
+
+function showFailed(){
+  setQRState('failed');
+  document.getElementById('back-btn').style.display = 'none';
+  document.getElementById('trouble-row').style.display = 'none';
+  setStep(3);
+}
+
+['f-name','f-email','f-phone'].forEach((id) => {
+  document.getElementById(id).addEventListener('input', function(){
+    this.classList.remove('error');
+    document.getElementById('e-' + id.slice(2)).classList.remove('show');
+  });
+});
+</script>
+</body>
+</html>
